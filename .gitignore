@@ -5,6 +5,9 @@ package-lock.json
 # Environment variables
 .env
 
+# Contacts data
+contatos.txt
+
 # Lock files
 *.lock
 

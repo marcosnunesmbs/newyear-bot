@@ -58,25 +58,35 @@ async function sendMessage(userId, text) {
     } catch (error) {
         await log(`❌ Erro no envio para ${userId}. Tentando correção de dígito...`);
 
-        // Fallback: remove o 5º dígito (9º dígito do celular)
-        if (userId.length >= 13) {
-            const userIdCorrigido = userId.slice(0, 4) + userId.slice(5);
-            const dataCorrigido = {
-                session: SESSION,
-                chatId: `${userIdCorrigido}@c.us`,
-                text: text
-            };
-
-            try {
-                await axios.post(API_URL, dataCorrigido, config);
-                await log(`✅ Sucesso com correção: ${userIdCorrigido}`);
-                return true;
-            } catch (errorCorrecao) {
-                await log(`❌ Falha mesmo com correção para ${userId}`);
-                return false;
-            }
+        let userIdCorrigido;
+        
+        // Fallback: ajusta o 9º dígito (5ª posição) conforme o tamanho
+        if (userId.length === 13) {
+            // Remove o 5º dígito (de 13 para 12 dígitos)
+            userIdCorrigido = userId.slice(0, 4) + userId.slice(5);
+        } else if (userId.length === 12) {
+            // Adiciona 9 na 5ª posição (de 12 para 13 dígitos)
+            userIdCorrigido = userId.slice(0, 4) + '9' + userId.slice(4);
+        } else {
+            // Tamanho inesperado, não tenta correção
+            await log(`❌ Tamanho de número inesperado (${userId.length} dígitos): ${userId}`);
+            return false;
         }
-        return false;
+
+        const dataCorrigido = {
+            session: SESSION,
+            chatId: `${userIdCorrigido}@c.us`,
+            text: text
+        };
+
+        try {
+            await axios.post(API_URL, dataCorrigido, config);
+            await log(`✅ Sucesso com correção: ${userIdCorrigido}`);
+            return true;
+        } catch (errorCorrecao) {
+            await log(`❌ Falha mesmo com correção para ${userId}`);
+            return false;
+        }
     }
 }
 
