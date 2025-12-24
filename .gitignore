@@ -24,3 +24,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+#msgs
+msg_natal.txt
+msg_ano_novo.txt
