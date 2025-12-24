@@ -74,7 +74,7 @@ Para iniciar o bot:
 npm start
 ```
 
-O bot ficará rodando em segundo plano e verificará automaticamente as datas programadas a cada 10 segundos.
+O bot ficará rodando em segundo plano e verificará automaticamente as datas programadas a cada 5 minutos.
 
 ## 🔧 Funcionalidades
 

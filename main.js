@@ -104,8 +104,8 @@ async function processContacts(messageFile, lockFile) {
         await sendMessage(contact.userId, personalizedMessage);
 
         // Aguarda 20 segundos entre envios para não sobrecarregar a API
-        await log('⏳ Aguardando 10 segundos antes do próximo envio...');
-        await new Promise(resolve => setTimeout(resolve, 10000));
+        await log('⏳ Aguardando 20 segundos antes do próximo envio...');
+        await new Promise(resolve => setTimeout(resolve, 20000));
 
     }
 
@@ -147,13 +147,13 @@ async function checkAndSend() {
     await log(`📅 Data Natal: ${DATA_NATAL}`);
     await log(`📅 Data Ano Novo: ${DATA_ANO_NOVO}`);
     await log(`📄 Arquivo de log: ${LOG_FILE}`);
-    await log('⏰ Verificando a cada 10 segundos...\n');
+    await log('⏰ Verificando a cada 5 minutos...\n');
 
     // Executa imediatamente ao iniciar
     await checkAndSend();
 
-    // Agenda para rodar a cada 10 segundos
-    cron.schedule('*/10 * * * * *', async () => {
+    // Agenda para rodar a cada 5 minutos
+    cron.schedule('*/5 * * * *', async () => {
         if (EXECUTION === false) {
             const now = new Date().toLocaleString('pt-BR');
             await log(`⏰ Verificação: ${now}`);

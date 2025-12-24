@@ -40,7 +40,7 @@ DATA_ANO_NOVO=2026-01-01
 # 🚀 Fluxo de Execução
 
 1.  Verificação de Agendamento
-    O script deve rodar um CronJob a cada 10 segundos que realiza as seguintes validações:
+    O script deve rodar um CronJob a cada 5 minutos que realiza as seguintes validações:
 
     Verifica se os arquivos natal_finished.lock e ano_novo_finished.lock já existem. Se ambos existirem, o processo faz um log de encerramento e finaliza a execução (process.exit()).
 

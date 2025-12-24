@@ -6,7 +6,7 @@ Single-file Node.js bot that sends scheduled WhatsApp messages via WAHA API on s
 ## Architecture & Core Flow
 
 **Main Components** (all in `main.js`):
-1. **CronJob**: Runs every 10 seconds, checks dates vs `DATA_NATAL`/`DATA_ANO_NOVO` env vars
+1. **CronJob**: Runs every 5 minutes, checks dates vs `DATA_NATAL`/`DATA_ANO_NOVO` env vars
 2. **Lock System**: Creates `natal_finished.lock` or `ano_novo_finished.lock` after successful batch send
 3. **Retry Logic**: Auto-retries failed sends by removing 5th digit from userId (Brazilian phone format correction: `5561999999999` → `556199999999`)
 4. **Logging**: Dual output (console + file `logs_YYYY-MM-DD_HH-MM-SS.txt`) with ISO timestamps
@@ -58,8 +58,8 @@ ls -t logs_*.txt | head -1 | xargs cat
 
 ## Critical Timing Constraints
 
-- **20-second delay** between individual message sends (currently implemented as 10s in code - see line 112)
-- **10-second CronJob interval** for date checks
+- **20-second delay** between individual message sends (see line 108)
+- **5-minute CronJob interval** for date checks
 - First execution happens immediately on startup (before CronJob)
 
 ## Error Handling Pattern
@@ -94,8 +94,7 @@ Use `.example` files as templates for these.
 1. **Wrong date format in .env**: Must be `YYYY-MM-DD`, not `DD/MM/YYYY` or `MM-DD-YYYY`
 2. **WAHA not running**: Check API URL is reachable before assuming code issues
 3. **Lock files persist**: Delete manually to re-test sends
-4. **Timeout inconsistency**: Code uses 10s delay but spec says 20s - verify requirements before changing
-5. **Async logging**: All `log()` calls need `await` or messages may be lost on crash
+4. **Async logging**: All `log()` calls need `await` or messages may be lost on crash
 
 ## Extension Points
 
