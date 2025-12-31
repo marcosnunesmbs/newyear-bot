@@ -6,7 +6,7 @@ Single-file Node.js bot that sends scheduled WhatsApp messages via WAHA API on s
 ## Architecture & Core Flow
 
 **Main Components** (all in `main.js`):
-1. **CronJob**: Runs every 5 minutes, checks dates vs `DATA_NATAL`/`DATA_ANO_NOVO` env vars
+1. **CronJob**: Runs at interval defined by `CRON_TIME` env var (default: every 5 minutes), checks date/time vs `DATA_NATAL`/`DATA_ANO_NOVO` env vars in GMT-3 timezone
 2. **Lock System**: Creates `natal_finished.lock` or `ano_novo_finished.lock` after successful batch send
 3. **Retry Logic**: Auto-retries failed sends by removing 5th digit from userId (Brazilian phone format correction: `5561999999999` → `556199999999`)
 4. **Logging**: Dual output (console + file `logs_YYYY-MM-DD_HH-MM-SS.txt`) with ISO timestamps
@@ -35,15 +35,17 @@ Nome,5511999999999
 
 **.env variables**:
 - `WAHA_URL_API` - base URL WITHOUT trailing `/api/sendText`
-- `DATA_NATAL` / `DATA_ANO_NOVO` - ISO date format `YYYY-MM-DD`
+- `DATA_NATAL` / `DATA_ANO_NOVO` - Date and time format `YYYY-MM-DD HH:mm` (GMT-3 timezone)
+- `CRON_TIME` - Cron expression for check interval (default: `*/5 * * * *` = every 5 minutes)
 
 ## Key Developer Workflows
 
 **Testing without waiting for scheduled dates**:
-1. Set `.env` dates to today: `DATA_NATAL=2025-12-24`
-2. Delete lock files: `rm *.lock`
-3. Run: `npm start`
-4. Bot triggers immediately, creates new locks
+1. Set `.env` dates to current time: `DATA_NATAL=2025-12-31 15:50`
+2. Optionally set faster check interval: `CRON_TIME=*/1 * * * *`
+3. Delete lock files: `rm *.lock`
+4. Run: `npm start`
+5. Bot triggers immediately if current time >= configured time, creates new locks
 
 **Reset for re-send**:
 ```bash
@@ -58,9 +60,10 @@ ls -t logs_*.txt | head -1 | xargs cat
 
 ## Critical Timing Constraints
 
-- **20-second delay** between individual message sends (see line 108)
-- **5-minute CronJob interval** for date checks
+- **10-second delay** between individual message sends (configurable in code)
+- **Configurable CronJob interval** via `CRON_TIME` env var (default: every 5 minutes)
 - First execution happens immediately on startup (before CronJob)
+- Date/time comparisons use GMT-3 (America/Sao_Paulo) timezone
 
 ## Error Handling Pattern
 
@@ -91,10 +94,12 @@ Use `.example` files as templates for these.
 
 ## Common Pitfalls
 
-1. **Wrong date format in .env**: Must be `YYYY-MM-DD`, not `DD/MM/YYYY` or `MM-DD-YYYY`
-2. **WAHA not running**: Check API URL is reachable before assuming code issues
-3. **Lock files persist**: Delete manually to re-test sends
-4. **Async logging**: All `log()` calls need `await` or messages may be lost on crash
+1. **Wrong date/time format in .env**: Must be `YYYY-MM-DD HH:mm`, not `DD/MM/YYYY` or other formats
+2. **Timezone confusion**: All times are GMT-3 (Brasília), not UTC or local machine time
+3. **Invalid CRON_TIME**: Must be valid cron expression (5 fields: min hour day month weekday)
+4. **WAHA not running**: Check API URL is reachable before assuming code issues
+5. **Lock files persist**: Delete manually to re-test sends
+6. **Async logging**: All `log()` calls need `await` or messages may be lost on crash
 
 ## Extension Points
 

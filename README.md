@@ -46,9 +46,10 @@ cp .env.example .env
 ```env
 WAHA_URL_API=https://sua-instancia-waha.com
 WAHA_API_KEY=sua_chave_api
-DATA_NATAL=2025-12-25
-DATA_ANO_NOVO=2026-01-01
+DATA_NATAL=2025-12-25 18:00
+DATA_ANO_NOVO=2026-01-01 00:00
 SESSION=default
+CRON_TIME=*/5 * * * *
 ```
 
 5. Configure seus contatos:
@@ -74,7 +75,17 @@ Para iniciar o bot:
 npm start
 ```
 
-O bot ficará rodando em segundo plano e verificará automaticamente as datas programadas a cada 5 minutos.
+O bot ficará rodando em segundo plano e verificará automaticamente as datas programadas conforme o intervalo configurado em `CRON_TIME`.
+
+### Configuração do Intervalo (CRON_TIME)
+
+A variável `CRON_TIME` define a frequência de verificação usando formato cron:
+- `*/5 * * * *` - A cada 5 minutos (padrão)
+- `*/1 * * * *` - A cada 1 minuto
+- `*/10 * * * *` - A cada 10 minutos
+- `0 * * * *` - A cada hora
+
+**Formato:** `minuto hora dia mês dia-da-semana`
 
 ## 🔧 Funcionalidades
 

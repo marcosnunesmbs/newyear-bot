@@ -9,6 +9,7 @@ const API_KEY = process.env.WAHA_API_KEY;
 const SESSION = process.env.SESSION;
 const DATA_NATAL = process.env.DATA_NATAL;
 const DATA_ANO_NOVO = process.env.DATA_ANO_NOVO;
+const CRON_TIME = process.env.CRON_TIME || '*/5 * * * *';
 
 let EXECUTION = false;
 
@@ -113,9 +114,9 @@ async function processContacts(messageFile, lockFile) {
         await log(`\n📤 Enviando para ${contact.nome} (${contact.userId})...`);
         await sendMessage(contact.userId, personalizedMessage);
 
-        // Aguarda 20 segundos entre envios para não sobrecarregar a API
-        await log('⏳ Aguardando 20 segundos antes do próximo envio...');
-        await new Promise(resolve => setTimeout(resolve, 20000));
+        // Aguarda 10 segundos entre envios para não sobrecarregar a API
+        await log('⏳ Aguardando 10 segundos antes do próximo envio...');
+        await new Promise(resolve => setTimeout(resolve, 10000));
 
     }
 
@@ -134,17 +135,34 @@ async function checkAndSend() {
         process.exit(0);
     }
 
-    const hoje = new Date().toISOString().split('T')[0];
+    // Obtém data/hora atual em GMT-3
+    const agora = new Date();
+    const agoraGMT3 = new Date(agora.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    agoraGMT3.setHours(agoraGMT3.getHours() - 3);
+    console.log(`Data/Hora Atual (GMT-3): ${agoraGMT3.toISOString()}`);
+    
+    // Converte datas do .env para objetos Date
+    const [dataNatal, horaNatal] = DATA_NATAL.split(' ');
+    const [anoN, mesN, diaN] = dataNatal.split('-');
+    const [horaN, minN] = horaNatal.split(':');
+    const dataHoraNatal = new Date(anoN, mesN - 1, diaN, horaN - 3, minN);
+    console.log(`Data/Hora Natal (GMT-3): ${dataHoraNatal.toISOString()}`);
+    
+    const [dataAnoNovo, horaAnoNovo] = DATA_ANO_NOVO.split(' ');
+    const [anoA, mesA, diaA] = dataAnoNovo.split('-');
+    const [horaA, minA] = horaAnoNovo.split(':');
+    const dataHoraAnoNovo = new Date(anoA, mesA - 1, diaA, horaA - 3, minA);
+    console.log(`Data/Hora Ano Novo (GMT-3): ${dataHoraAnoNovo.toISOString()}`);
 
-    // Verifica se é dia de Natal e ainda não foi processado
-    if (hoje === DATA_NATAL && !natalLockExists) {
+    // Verifica se é hora de enviar mensagem de Natal e ainda não foi processado
+    if (agoraGMT3 >= dataHoraNatal && !natalLockExists) {
         EXECUTION = true;
         await processContacts('msg_natal.txt', NATAL_LOCK);
         EXECUTION = false;
     }
 
-    // Verifica se é dia de Ano Novo e ainda não foi processado
-    if (hoje === DATA_ANO_NOVO && !anoNovoLockExists) {
+    // Verifica se é hora de enviar mensagem de Ano Novo e ainda não foi processado
+    if (agoraGMT3 >= dataHoraAnoNovo && !anoNovoLockExists) {
         EXECUTION = true;
         await processContacts('msg_ano_novo.txt', ANO_NOVO_LOCK);
         EXECUTION = false;
@@ -157,13 +175,13 @@ async function checkAndSend() {
     await log(`📅 Data Natal: ${DATA_NATAL}`);
     await log(`📅 Data Ano Novo: ${DATA_ANO_NOVO}`);
     await log(`📄 Arquivo de log: ${LOG_FILE}`);
-    await log('⏰ Verificando a cada 5 minutos...\n');
+    await log(`⏰ Intervalo de verificação: ${CRON_TIME}\n`);
 
     // Executa imediatamente ao iniciar
     await checkAndSend();
 
-    // Agenda para rodar a cada 5 minutos
-    cron.schedule('*/5 * * * *', async () => {
+    // Agenda para rodar conforme CRON_TIME
+    cron.schedule(CRON_TIME, async () => {
         if (EXECUTION === false) {
             const now = new Date().toLocaleString('pt-BR');
             await log(`⏰ Verificação: ${now}`);
